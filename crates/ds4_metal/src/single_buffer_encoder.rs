@@ -5934,15 +5934,13 @@ impl<'a> SingleBufferEncoder<'a> {
                     // `indexer_allowed_decode_one` early-returns all-allowed at
                     // n_comp <= top_k, and this gate likewise doesn't fire — so
                     // default-on only changes the long-context regime (~28x).
-                    // DEFAULT OFF (was default-on): the GPU long-context indexer is the
-                    // prime suspect for antirez's "long generations output random text" report
-                    // — it engages ONLY past n_comp>top_k (~>2048 tokens), exactly the
-                    // long-generation regime, and diverges from the CPU `indexer_allowed_decode_one`
-                    // oracle. Routing long-context selection through the proven CPU path is
-                    // correctness-first (worst case a perf trade, never a correctness regression).
-                    // Re-enable the GPU speedup with DS4_GPU_INDEXER=1 once the path is verified.
+                    // DS4_GPU_INDEXER (default ON; =0 reverts to CPU): for the long-context
+                    // path (n_comp > top_k, ~>2048 tokens) move the indexer SCORE compute to the
+                    // GPU and do the cheap greedy top-k on CPU. (Investigated re: a "long
+                    // generations go random" report — A/B'd default vs DS4_GPU_INDEXER=1 at 2600
+                    // and 8000 tokens: BOTH coherent, so this path is not the cause; kept on.)
                     let gpu_indexer = std::env::var("DS4_GPU_INDEXER").ok().as_deref()
-                        == Some("1")
+                        != Some("0")
                         && n_index_comp > ds4_engine::attn_dispatch::ds4_n_indexer_top_k();
                     let selected: Vec<u32> = if gpu_indexer {
                         let scope = self.dispatcher.batch_scope();

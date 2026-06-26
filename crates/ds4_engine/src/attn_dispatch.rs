@@ -2084,13 +2084,8 @@ impl AttnLayerWeights {
         // `indexer_allowed_decode_one` early-returns all-allowed at n_comp<=top_k).
         let indexer_attn_q_b_f16 = raw_f16("indexer_attn_q_b")?;
         let indexer_proj_f16 = raw_f16("indexer_proj")?;
-        // DEFAULT OFF (was default-on): keep the f32 indexer-scoring weights so the
-        // CPU long-context indexer (the antirez oracle) runs by default. The GPU
-        // long-context indexer is the suspected cause of the "long generations go
-        // random" report and is now opt-in via DS4_GPU_INDEXER=1 (must match the
-        // single_buffer_encoder gate).
         let gpu_indexer_on =
-            std::env::var("DS4_GPU_INDEXER").map(|v| v == "1").unwrap_or(false);
+            std::env::var("DS4_GPU_INDEXER").map(|v| v != "0").unwrap_or(true);
         let skip_idx_score = lean
             && gpu_indexer_on
             && !indexer_attn_q_b_f16.is_empty()
