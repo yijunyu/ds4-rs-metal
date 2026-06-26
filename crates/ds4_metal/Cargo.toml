@@ -1,0 +1,22 @@
+[package]
+name    = "ds4_metal"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+description = "Metal back-end implementation of ds4_engine::dispatch::KernelDispatcher (macOS only; Linux exposes a stub that errors at runtime)"
+
+[lib]
+name = "ds4_metal"
+path = "src/lib.rs"
+
+[dependencies]
+ds4_engine = { path = "../ds4_engine" }
+anyhow     = "1"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+metal = "0.29"
+objc  = "0.2"
+libc  = "0.2"
+
+[features]
+metal_capture = []

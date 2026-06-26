@@ -1,0 +1,49 @@
+ds4_metal — THIRD-PARTY NOTICES
+================================
+
+ds4_metal is a DERIVATIVE WORK. It links and/or embeds source from the
+projects below; their licenses are reproduced here and MUST be retained in any
+distribution (source or binary) of ds4_metal, per the MIT license terms.
+
+--------------------------------------------------------------------------------
+1. antirez/ds4 ("DwarfStar") + ggml
+--------------------------------------------------------------------------------
+ds4_metal embeds verbatim Metal Shading Language (MSL) kernel source from
+antirez/ds4 (the upstream `ds4_metal.m` / `metal/*.metal` shaders) via the
+"antirez bridge" assembled in build.rs, and FFIs into the antirez C engine for
+the prefill path. Those portions are governed by the following MIT license:
+
+    MIT License
+
+    Copyright (c) 2026 The ds4.c authors
+    Copyright (c) 2023-2026 The ggml authors
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.
+
+--------------------------------------------------------------------------------
+2. ds4_metal's own additions
+--------------------------------------------------------------------------------
+The original work in this crate — the residency/event-pipeline scheduling, the
+single-buffer encoder, the lean no-copy q8/f16 weight path, the GLM-5.2 Metal
+kernels, the tile-rs-generated MSL kernels (see PROVENANCE.md) — is licensed
+under "MIT OR Apache-2.0" (see the workspace LICENSE-MIT / LICENSE-APACHE),
+without prejudice to the upstream MIT notice above.
+
+See PROVENANCE.md for a file-by-file map of which Metal shaders are
+antirez-derived (verbatim upstream) versus tile-rs codegen output.

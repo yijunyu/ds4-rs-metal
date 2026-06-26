@@ -1,0 +1,7 @@
+/target
+**/target
+*.gguf
+.DS_Store
+*.swp
+dist/
+.claude/

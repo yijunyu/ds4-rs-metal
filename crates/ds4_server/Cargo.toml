@@ -1,0 +1,29 @@
+[package]
+name = "ds4_server"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+description = "OpenAI/Anthropic-compatible HTTP server for DS4-Flash, driving our pure-Rust Metal engine (ds4_metal::DecodeRunner). Hand-rolled std::net HTTP/1.1 + SSE (no async runtime — matches the vendored-deps workspace)."
+
+[[bin]]
+name = "ds4-server"
+path = "src/main.rs"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+anyhow = "1"
+
+ds4_engine = { path = "../ds4_engine" }
+
+# Backend crates are optional and selected via the `metal` / `cuda` features.
+# `metal` (default) → ds4_metal (macOS/Metal); `cuda` → ds4_cuda (aarch64-linux /
+# NVIDIA DGX Spark). Server code references the active backend through the
+# `crate::backend` cfg-alias module, never these crate names directly.
+# See docs/MIG_DS4_SERVER_DECOUPLE.md.
+ds4_metal = { path = "../ds4_metal", optional = true }
+
+[features]
+default = ["metal"]
+metal = ["dep:ds4_metal"]
+# `ds4_cuda/cuda` forwards so the cuda-gated modules in ds4_cuda compile.

@@ -1,0 +1,29 @@
+[package]
+name    = "ds4_engine"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+description = "Decode-only inference engine for antirez/ds4 (DeepSeek-V4 q2) using generated tile-rs MSL kernels"
+
+[dependencies]
+# GGUF + generic dependencies (Linux + macOS).
+# Only crates already in this workspace's vendor/ directory.
+anyhow      = "1"
+
+# Unix mmap for the GGUF byte source (Linux + macOS). Avoids the
+# 80 GB `std::fs::read` slurp in `LayerViews::open`.
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+
+# Metal runtime (macOS only).
+[target.'cfg(target_os = "macos")'.dependencies]
+metal    = "0.29"
+objc     = "0.2"
+
+# M4 prefill bridge: compile vendored antirez/ds4 sources via cc on macOS only.
+# build.rs is a no-op on non-macOS targets.
+[target.'cfg(target_os = "macos")'.build-dependencies]
+cc = "1"
+
+[dev-dependencies]
+anyhow = "1"

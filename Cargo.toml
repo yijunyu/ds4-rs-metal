@@ -1,0 +1,11 @@
+# ds4-rs-metal — DeepSeek-V4-Flash inference on Apple Silicon (Metal), in Rust.
+# Self-contained workspace: build with `cargo build --release -p ds4_server --features metal`.
+# Derivative of antirez/ds4 (MIT) — vendored under benchmarks/ds4_msl/upstream/ (see NOTICE).
+[workspace]
+members = ["crates/ds4_engine", "crates/ds4_metal", "crates/ds4_server"]
+resolver = "2"
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
