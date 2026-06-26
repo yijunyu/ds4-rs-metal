@@ -8802,15 +8802,22 @@ impl<'a> BatchScope<'a> {
             let d = div.parse::<u64>().unwrap_or(2).max(1);
             ((k_positions as u64) + d - 1) / d
         } else {
-            // DEFAULT = ceil(K/8): grid covers ~375 tpe @K=3000 = 2x margin over the observed
-            // max tpe (187). With the inter-cb bubble removed (bounded event-pipeline), the MoE
-            // GEMM over-dispatch is the next gpu_busy lever — K/4→K/8 = +3% prefill @3000
-            // (295.6→304.4 tok/s = +19.8% over antirez 254, BEATS the +18% goal). Byte-identical
-            // at K=3000 (chunk_flag_identity DS4_MOE_GRID_DIV=8 vs WIDE). 2x margin is safe for any
-            // load-balanced aux-loss-free DeepSeek router (would need >375/3000 tokens to one of
-            // 256 experts to drop). DS4_MOE_GRID_DIV=4 reverts to the 4x-margin default;
-            // DS4_MOE_GRID_DIV=1 = provably-safe K; DS4_MOE_GRID_WIDE=1 = original K*6.
-            (k_positions as u64 + 7) / 8 // ceil(K/8) — 2x margin over observed max tpe (187 @K=3000)
+            // DEFAULT = K (provably safe). The only PROVABLE bound is tpe[e] <= K: a token routes
+            // to 6 DISTINCT experts, so a single expert can be chosen by at most K tokens. Sizing
+            // the grid to K guarantees the kernel covers every expert's actual tokens-per-expert
+            // and NEVER silently drops a token — regardless of the routing distribution.
+            //
+            // Earlier defaults (ceil(K/8) etc.) were faster (they trimmed the early-exit
+            // over-dispatch, ~+18% prefill @K=3000) but relied on an EMPIRICAL margin (observed
+            // max tpe 187 vs a 375 cap) rather than a guarantee: a sufficiently unbalanced prompt
+            // could push an expert past the cap and silently drop those tokens' contribution
+            // (correctness bug). Correctness > the few-percent prefill win, so the safe bound is
+            // the default. Opt back into the faster margin-based grids explicitly:
+            //   DS4_MOE_GRID_DIV=N      → ceil(K/N) cap (UNSAFE if any expert's tpe > K/N)
+            //   DS4_MOE_GRID_INDIRECT=1 → adaptive: GPU max-reduce of tpe[] sizes the grid to the
+            //                             RUN's true max (always safe, recovers most of the speed)
+            //   DS4_MOE_GRID_WIDE=1     → the original K*6 worst case.
+            k_positions as u64 // provably safe: tpe[e] <= K, no silent token drop
         };
         // SAFETY: the K/2 default is byte-identical for any prompt whose actual max tpe <= K/2
         // (validated by the chunk_flag_identity gate: DS4_MOE_GRID_DIV=N vs DS4_MOE_GRID_WIDE).
